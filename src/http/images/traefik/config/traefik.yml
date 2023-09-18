@@ -1,0 +1,40 @@
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: true
+
+serversTransport:
+  insecureSkipVerify: true
+
+entryPoints:
+  # Not used in apps, but redirect everything from HTTP
+  http:
+    address: :80
+
+providers:
+  providersThrottleDuration: 2s
+  # File provider for connecting things that are outside of docker / defining middleware
+  file:
+    directory: /etc/traefik/dynamic/
+    watch: true
+  # Docker provider for connecting all apps that are inside of the docker network
+  docker:
+    endpoint: "tcp://dockersocket:2375"
+    network: proxy
+    exposedByDefault: false
+    swarmModeRefreshSeconds: 15s
+    watch: true
+
+# Enable traefik ui
+api:
+  dashboard: true
+  insecure: true
+
+# Log level INFO|DEBUG|ERROR
+log:
+  level: INFO
+
+accessLog:
+  filePath: /var/log/traefik/access.log
+  fields:
+    names:
+      StartUTC: drop

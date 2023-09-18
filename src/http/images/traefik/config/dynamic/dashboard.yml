@@ -1,0 +1,9 @@
+http:
+  routers:
+    dashboard:
+      entryPoints:
+        - http
+      rule: Host(`monitor.domain_name.com`)
+      service: api@internal
+      middlewares:
+        - traefikBasicAuth@file
