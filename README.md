@@ -193,7 +193,8 @@ Can remove or command.
 ### Step 7: Test Your Deployment
 
 ```bash
-curl --insecure https://{domain_name}/
+curl --insecure http://{domain_name}/
+curl -I https://{domain_name}/
 ```
 
 You can also test it in the browser:
