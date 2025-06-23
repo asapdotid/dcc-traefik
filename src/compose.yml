@@ -1,0 +1,117 @@
+---
+services:
+  dockersocket:
+    image: lscr.io/linuxserver/socket-proxy:${SOCKET_PROXY_VERSION?}
+    container_name: dockersocket
+    restart: unless-stopped
+    environment:
+      - ALLOW_START=0
+      - ALLOW_STOP=0
+      - ALLOW_RESTARTS=0
+      - AUTH=0
+      - BUILD=0
+      - COMMIT=0
+      - CONFIGS=0
+      - CONTAINERS=1
+      - DISABLE_IPV6=0
+      - DISTRIBUTION=0
+      - EVENTS=1
+      - EXEC=0
+      - IMAGES=0
+      - INFO=1
+      - NETWORKS=1
+      - NODES=1
+      - PING=1
+      - PLUGINS=0
+      - POST=0
+      - PROXY_READ_TIMEOUT=240
+      - SECRETS=0
+      - SERVICES=0
+      - SESSION=0
+      - SWARM=0
+      - SYSTEM=0
+      - TASKS=0
+      - VERSION=1
+      - VOLUMES=0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    privileged: true
+    read_only: true
+    tmpfs:
+      - /run
+    networks:
+      - secure
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+
+  traefik:
+    image: traefik:${TRAEFIK_VERSION?}
+    container_name: traefik
+    restart: unless-stopped
+    depends_on:
+      - dockersocket
+    networks:
+      - secure
+      - proxy
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
+      - target: 443
+        published: ${TRAEFIK_HTTPS_PORT:-443}
+        protocol: tcp
+        mode: host
+    env_file:
+      - ${CURDIR}/src/.env
+    environment:
+      - TZ=${TRAEFIK_TIMEZONE}
+      - CF_DNS_API_TOKEN_FILE=/run/secrets/cloudflare_api_token
+      - CF_API_EMAIL_FILE=/run/secrets/cloudflare_email
+    volumes:
+      - ${CURDIR}/src/config/traefik.yml:/etc/traefik/traefik.yml
+      - ${CURDIR}/src/config/dynamic:/etc/traefik/dynamic/
+      - ${CURDIR}/.data/ssl:/etc/traefik/ssl/
+      - ${CURDIR}/.logs:/var/log/traefik/
+    secrets:
+      - cloudflare_email
+      - cloudflare_api_token
+      - traefik_users
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+
+  logrotate:
+    image: vegardit/traefik-logrotate:${LOGROTATE_VERSION?}
+    container_name: logrotate
+    depends_on:
+      - traefik
+    restart: unless-stopped
+    networks:
+      - secure
+    environment:
+      TZ: ${TRAEFIK_TIMEZONE}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${CURDIR}/.logs:/var/log/traefik/
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+
+secrets:
+  cloudflare_email:
+    file: ${CURDIR}/src/secrets/cloudflare_email.secret
+  cloudflare_api_token:
+    file: ${CURDIR}/src/secrets/cloudflare_api_token.secret
+  traefik_users:
+    file: ${CURDIR}/src/secrets/traefik_users.secret
+
+networks:
+  secure:
+    external: false
+  proxy:
+    external: true
