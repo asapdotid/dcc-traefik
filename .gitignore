@@ -61,3 +61,4 @@ Temporary Items
 # Source code
 /src/*
 !/src/compose.yml
+!/src/.env.example
