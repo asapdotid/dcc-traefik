@@ -53,7 +53,7 @@ entryPoints:
             sans:
               - "*.domain_name.com"
       middlewares:
-        - default
+        - default@file
 
 providers:
   providersThrottleDuration: 2s
