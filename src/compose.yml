@@ -83,6 +83,11 @@ services:
       restart_policy:
         condition: on-failure
         delay: 5s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   logrotate:
     image: vegardit/traefik-logrotate:${LOGROTATE_VERSION?}
