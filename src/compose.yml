@@ -3,7 +3,7 @@ services:
   dockersocket:
     image: lscr.io/linuxserver/socket-proxy:${SOCKET_PROXY_VERSION?}
     container_name: dockersocket
-    restart: unless-stopped
+    restart: always
     environment:
       - ALLOW_START=0
       - ALLOW_STOP=0
@@ -49,7 +49,7 @@ services:
   traefik:
     image: traefik:${TRAEFIK_VERSION?}
     container_name: traefik
-    restart: unless-stopped
+    restart: always
     depends_on:
       - dockersocket
     networks:
@@ -89,7 +89,7 @@ services:
     container_name: logrotate
     depends_on:
       - traefik
-    restart: unless-stopped
+    restart: always
     networks:
       - secure
     environment:
